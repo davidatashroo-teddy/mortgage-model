@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mortgage Model — Orinda Home Purchase</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f6f9;
+      --card:      #ffffff;
+      --border:    #e2e8f0;
+      --navy:      #1e3a5f;
+      --blue:      #2563eb;
+      --blue-lt:   #dbeafe;
+      --teal:      #0d9488;
+      --teal-lt:   #ccfbf1;
+      --amber:     #d97706;
+      --amber-lt:  #fef3c7;
+      --red:       #dc2626;
+      --red-lt:    #fee2e2;
+      --text:      #1e293b;
+      --muted:     #64748b;
+      --highlight: #eff6ff;
+      --radius:    12px;
+      --shadow:    0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 0 0 80px;
+    }
+
+    /* ── Header ──────────────────────────────────────────────────── */
+    header {
+      background: var(--navy);
+      color: #fff;
+      padding: 20px 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    header h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+    header p  { font-size: .82rem; color: #94a3b8; }
+
+    /* ── Layout shell ────────────────────────────────────────────── */
+    .page { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+
+    /* ── Section wrapper ─────────────────────────────────────────── */
+    section {
+      margin-top: 24px;
+    }
+    .section-title {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Card ────────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Slider rows ─────────────────────────────────────────────── */
+    .slider-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 600px) {
+      .slider-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .slider-row { display: flex; flex-direction: column; gap: 6px; }
+
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .slider-label {
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .slider-val {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+      accent-color: var(--blue);
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    }
+
+    /* ── Output cards grid ───────────────────────────────────────── */
+    .cards-2col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 600px) {
+      .cards-2col { grid-template-columns: 1fr 1fr; }
+    }
+
+    .output-card {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+    .output-card.option-a { border-top: 3px solid var(--blue); }
+    .output-card.option-b { border-top: 3px solid var(--teal); }
+    .output-card.phase2   { border-top: 3px solid var(--amber); }
+
+    .output-card h3 {
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .88rem;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--muted); }
+    .stat-val   { font-weight: 600; }
+
+    .big-stat {
+      text-align: center;
+      padding: 10px 0 6px;
+    }
+    .big-stat .amount {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .big-stat .caption {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .option-a .big-stat .amount { color: var(--blue); }
+    .option-b .big-stat .amount { color: var(--teal); }
+    .phase2   .big-stat .amount { color: var(--amber); }
+
+    .savings-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+      margin-top: 4px;
+    }
+    .chip-green { background: var(--teal-lt); color: var(--teal); }
+    .chip-blue  { background: var(--blue-lt); color: var(--blue); }
+
+    /* ── HELOC payback card ──────────────────────────────────────── */
+    .heloc-card {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      border-top: 3px solid var(--red);
+    }
+    .heloc-card h3 {
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+    }
+    .heloc-result {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 12px 0 6px;
+    }
+    .heloc-ok  { color: var(--teal); }
+    .heloc-gap { color: var(--red);  }
+
+    /* ── Price Comparison Table ──────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+    th, td {
+      padding: 9px 10px;
+      text-align: right;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    th { font-weight: 700; color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; background: var(--bg); }
+    td:first-child, th:first-child { text-align: left; }
+
+    tr.target-row td {
+      background: var(--highlight);
+      font-weight: 700;
+      color: var(--navy);
+    }
+    tr.target-row td:first-child::after {
+      content: " ★";
+      color: var(--blue);
+      font-size: .7rem;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Timestamp & disclaimer ──────────────────────────────────── */
+    .meta {
+      text-align: center;
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 28px;
+      padding: 0 16px;
+    }
+    .disclaimer {
+      margin-top: 8px;
+      font-size: .7rem;
+      color: #94a3b8;
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+
+    /* ── Phase divider label ─────────────────────────────────────── */
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .phase-badge {
+      display: inline-block;
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+    .badge-blue  { background: var(--blue-lt);  color: var(--blue);  }
+    .badge-amber { background: var(--amber-lt); color: var(--amber); }
+
+    /* ── Section group within phase 2 ───────────────────────────── */
+    .savings-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .savings-chip-large {
+      flex: 1 1 160px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .savings-chip-large .lbl { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+    .savings-chip-large .amt { font-size: 1.15rem; font-weight: 800; color: var(--teal); margin-top: 4px; }
+
+    /* ── Inputs group header ─────────────────────────────────────── */
+    .input-group-label {
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--blue);
+      margin: 16px 0 10px;
+      padding: 0 2px;
+    }
+    .input-group-label:first-child { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🏡 Orinda Home Purchase Model</h1>
+  <p>Two-phase bridge strategy · Adjust sliders to update all figures instantly</p>
+</header>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 1 — INPUTS
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">Your Numbers</div>
+    <div class="card">
+
+      <div class="input-group-label">🏷 Purchase</div>
+      <div class="slider-grid">
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Purchase Price</span>
+            <span class="slider-val" id="val-price">$2,700,000</span>
+          </div>
+          <input type="range" id="sl-price" min="2000000" max="3500000" step="50000" value="2700000" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Down Payment</span>
+            <span class="slider-val" id="val-down">20.00%</span>
+          </div>
+          <input type="range" id="sl-down" min="10" max="30" step="1" value="20" />
+        </div>
+
+      </div>
+
+      <div class="input-group-label">📊 Rates</div>
+      <div class="slider-grid">
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Phase 1 Rate — Fully Amortizing</span>
+            <span class="slider-val" id="val-rate1fa">6.875%</span>
+          </div>
+          <input type="range" id="sl-rate1fa" min="4" max="10" step="0.125" value="6.875" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Phase 1 Rate — Interest Only</span>
+            <span class="slider-val" id="val-rate1io">7.250%</span>
+          </div>
+          <input type="range" id="sl-rate1io" min="4" max="10" step="0.125" value="7.25" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Phase 2 Refi Rate</span>
+            <span class="slider-val" id="val-rate2">6.125%</span>
+          </div>
+          <input type="range" id="sl-rate2" min="4" max="9" step="0.125" value="6.125" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">HELOC Rate</span>
+            <span class="slider-val" id="val-helocrate">8.750%</span>
+          </div>
+          <input type="range" id="sl-helocrate" min="4" max="12" step="0.25" value="8.75" />
+        </div>
+
+      </div>
+
+      <div class="input-group-label">💰 Principal & HELOC</div>
+      <div class="slider-grid">
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Principal Paydown at Refi</span>
+            <span class="slider-val" id="val-paydown">$150,000</span>
+          </div>
+          <input type="range" id="sl-paydown" min="0" max="500000" step="10000" value="150000" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">HELOC Balance</span>
+            <span class="slider-val" id="val-heloc">$306,200</span>
+          </div>
+          <input type="range" id="sl-heloc" min="0" max="500000" step="10000" value="306200" />
+        </div>
+
+      </div>
+
+      <div class="input-group-label">🏠 Sale & Bridge</div>
+      <div class="slider-grid">
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Snowberry Net Proceeds</span>
+            <span class="slider-val" id="val-proceeds">$700,000</span>
+          </div>
+          <input type="range" id="sl-proceeds" min="500000" max="1200000" step="25000" value="700000" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Bridge Period</span>
+            <span class="slider-val" id="val-bridge">12 months</span>
+          </div>
+          <input type="range" id="sl-bridge" min="6" max="24" step="1" value="12" />
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 2 — PHASE 1
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">
+      <span class="phase-badge badge-blue">Phase 1</span>
+      &nbsp;Buy Now — Bridge Period
+    </div>
+
+    <div class="cards-2col">
+
+      <!-- Option A: Fully Amortizing -->
+      <div class="output-card option-a">
+        <h3>Option A — Fully Amortizing</h3>
+        <div class="big-stat">
+          <div class="amount" id="p1a-total">—</div>
+          <div class="caption">Total monthly carrying cost</div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Loan Amount</span>
+          <span class="stat-val" id="p1a-loan">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Monthly P&amp;I</span>
+          <span class="stat-val" id="p1a-pi">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">HELOC Interest</span>
+          <span class="stat-val" id="p1a-heloc">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Bridge Cost (<span id="p1a-months">12</span> mo)</span>
+          <span class="stat-val" id="p1a-bridge-total">—</span>
+        </div>
+      </div>
+
+      <!-- Option B: Interest Only -->
+      <div class="output-card option-b">
+        <h3>Option B — Interest Only</h3>
+        <div class="big-stat">
+          <div class="amount" id="p1b-total">—</div>
+          <div class="caption">Total monthly carrying cost</div>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Loan Amount</span>
+          <span class="stat-val" id="p1b-loan">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Monthly Interest Only</span>
+          <span class="stat-val" id="p1b-io">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">HELOC Interest</span>
+          <span class="stat-val" id="p1b-heloc">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Bridge Cost (<span id="p1b-months">12</span> mo)</span>
+          <span class="stat-val" id="p1b-bridge-total">—</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 3 — PHASE 2
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">
+      <span class="phase-badge badge-amber">Phase 2</span>
+      &nbsp;After Snowberry Sale — Refinance
+    </div>
+
+    <div class="output-card phase2">
+      <h3>Phase 2 — Refinanced Payment</h3>
+
+      <div class="cards-2col" style="margin-bottom:0;">
+        <div>
+          <div class="big-stat" style="text-align:left; padding-top:0;">
+            <div class="amount" id="p2-payment">—</div>
+            <div class="caption">New monthly P&amp;I</div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Phase 1 Loan</span>
+            <span class="stat-val" id="p2-p1loan">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Principal Paydown</span>
+            <span class="stat-val" id="p2-paydown">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Phase 2 Loan Balance</span>
+            <span class="stat-val" id="p2-loan">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Phase 2 Rate</span>
+            <span class="stat-val" id="p2-rate">—</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="savings-row">
+            <div class="savings-chip-large">
+              <div class="lbl">vs Option A (FA)</div>
+              <div class="amt" id="p2-save-a">—</div>
+              <div style="font-size:.7rem; color:var(--muted); margin-top:2px;">per month</div>
+            </div>
+            <div class="savings-chip-large">
+              <div class="lbl">vs Option B (IO)</div>
+              <div class="amt" id="p2-save-b">—</div>
+              <div style="font-size:.7rem; color:var(--muted); margin-top:2px;">per month</div>
+            </div>
+            <div class="savings-chip-large" style="flex-basis:100%;">
+              <div class="lbl">60-Month Total Savings (vs FA)</div>
+              <div class="amt" id="p2-save-60">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 4 — PRICE COMPARISON TABLE
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">Price Comparison — 5 Scenarios</div>
+    <div class="card">
+      <div class="table-wrap">
+        <table id="comparison-table">
+          <thead>
+            <tr>
+              <th>Price</th>
+              <th>Down $</th>
+              <th>Loan</th>
+              <th>P1 P&amp;I / mo</th>
+              <th>P1 IO / mo</th>
+              <th>P2 P&amp;I / mo</th>
+              <th>Cash to Close</th>
+            </tr>
+          </thead>
+          <tbody id="comparison-body">
+            <!-- filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 5 — HELOC PAYBACK
+  ═══════════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="section-title">HELOC Payback Analysis</div>
+    <div class="heloc-card">
+      <h3>From Snowberry Proceeds</h3>
+
+      <div class="stat-row">
+        <span class="stat-label">Snowberry Net Proceeds</span>
+        <span class="stat-val" id="hpb-proceeds">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Principal Paydown (mortgage)</span>
+        <span class="stat-val" id="hpb-paydown">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">HELOC Balance</span>
+        <span class="stat-val" id="hpb-balance">—</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Leftover after mortgage paydown</span>
+        <span class="stat-val" id="hpb-leftover">—</span>
+      </div>
+
+      <div id="hpb-result-block" style="margin-top: 14px;"></div>
+    </div>
+  </section>
+
+  <!-- ─── Timestamp & Disclaimer ─────────────────────────────── -->
+  <div class="meta">
+    <span>Last updated: <span id="last-updated">—</span></span>
+  </div>
+  <p class="disclaimer">For planning purposes only. Consult your lender for official figures.</p>
+
+</div><!-- /page -->
+
+<script>
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function fmt$(n, decimals=0) {
+  if (!isFinite(n)) return '—';
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function fmtPct(n) {
+  return n.toFixed(3).replace(/\.?0+$/, match => match === '.' ? '' : match) + '%';
+  // cleaner version:
+}
+
+function fmtPctClean(n) {
+  // show up to 3 decimal places, strip trailing zeros but keep at least 2
+  let s = n.toFixed(3);
+  // remove trailing zeros after decimal, but keep 2 dec min
+  s = s.replace(/(\.\d\d[1-9]?)0+$/, '$1');
+  return s + '%';
+}
+
+// Monthly P&I (fully amortizing 30yr)
+function calcPI(principal, annualRate) {
+  const r = annualRate / 100 / 12;
+  const n = 360;
+  if (r === 0) return principal / n;
+  return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+}
+
+// Monthly interest only
+function calcIO(principal, annualRate) {
+  return principal * (annualRate / 100) / 12;
+}
+
+// ─── Slider wiring ────────────────────────────────────────────────────────────
+const sliders = {
+  price:    { id: 'sl-price',    valId: 'val-price',    fmt: v => fmt$(v) },
+  down:     { id: 'sl-down',     valId: 'val-down',     fmt: v => fmtPctClean(parseFloat(v)) },
+  rate1fa:  { id: 'sl-rate1fa',  valId: 'val-rate1fa',  fmt: v => fmtPctClean(parseFloat(v)) },
+  rate1io:  { id: 'sl-rate1io',  valId: 'val-rate1io',  fmt: v => fmtPctClean(parseFloat(v)) },
+  rate2:    { id: 'sl-rate2',    valId: 'val-rate2',    fmt: v => fmtPctClean(parseFloat(v)) },
+  helocrate:{ id: 'sl-helocrate',valId: 'val-helocrate',fmt: v => fmtPctClean(parseFloat(v)) },
+  paydown:  { id: 'sl-paydown',  valId: 'val-paydown',  fmt: v => fmt$(v) },
+  heloc:    { id: 'sl-heloc',    valId: 'val-heloc',    fmt: v => fmt$(v) },
+  proceeds: { id: 'sl-proceeds', valId: 'val-proceeds', fmt: v => fmt$(v) },
+  bridge:   { id: 'sl-bridge',   valId: 'val-bridge',   fmt: v => v + ' months' },
+};
+
+Object.entries(sliders).forEach(([key, cfg]) => {
+  const el = $(cfg.id);
+  const valEl = $(cfg.valId);
+  el.addEventListener('input', () => {
+    valEl.textContent = cfg.fmt(el.value);
+    recalculate();
+  });
+});
+
+// ─── Main recalc ──────────────────────────────────────────────────────────────
+function getVals() {
+  return {
+    price:     parseFloat($('sl-price').value),
+    downPct:   parseFloat($('sl-down').value) / 100,
+    rate1fa:   parseFloat($('sl-rate1fa').value),
+    rate1io:   parseFloat($('sl-rate1io').value),
+    rate2:     parseFloat($('sl-rate2').value),
+    helocRate: parseFloat($('sl-helocrate').value),
+    paydown:   parseFloat($('sl-paydown').value),
+    heloc:     parseFloat($('sl-heloc').value),
+    proceeds:  parseFloat($('sl-proceeds').value),
+    bridge:    parseInt($('sl-bridge').value),
+  };
+}
+
+function recalculate() {
+  const v = getVals();
+
+  // ── Derived ──
+  const downAmt   = v.price * v.downPct;
+  const loan1     = v.price - downAmt;
+  const helocMo   = v.heloc * (v.helocRate / 100) / 12;
+
+  // Phase 1
+  const p1a_pi    = calcPI(loan1, v.rate1fa);
+  const p1a_total = p1a_pi + helocMo;
+  const p1b_io    = calcIO(loan1, v.rate1io);
+  const p1b_total = p1b_io + helocMo;
+
+  // Phase 2
+  const loan2     = Math.max(0, loan1 - v.paydown);
+  const p2_pay    = calcPI(loan2, v.rate2);
+  const saveVsA   = p1a_total - p2_pay;
+  const saveVsB   = p1b_total - p2_pay;
+  const save60    = saveVsA * 60;
+
+  // ── Section 2: Phase 1 ──
+  $('p1a-loan').textContent         = fmt$(loan1);
+  $('p1a-pi').textContent           = fmt$(p1a_pi);
+  $('p1a-heloc').textContent        = fmt$(helocMo);
+  $('p1a-total').textContent        = fmt$(p1a_total);
+  $('p1a-months').textContent       = v.bridge;
+  $('p1a-bridge-total').textContent = fmt$(p1a_total * v.bridge);
+
+  $('p1b-loan').textContent         = fmt$(loan1);
+  $('p1b-io').textContent           = fmt$(p1b_io);
+  $('p1b-heloc').textContent        = fmt$(helocMo);
+  $('p1b-total').textContent        = fmt$(p1b_total);
+  $('p1b-months').textContent       = v.bridge;
+  $('p1b-bridge-total').textContent = fmt$(p1b_total * v.bridge);
+
+  // ── Section 3: Phase 2 ──
+  $('p2-payment').textContent = fmt$(p2_pay);
+  $('p2-p1loan').textContent  = fmt$(loan1);
+  $('p2-paydown').textContent = fmt$(v.paydown);
+  $('p2-loan').textContent    = fmt$(loan2);
+  $('p2-rate').textContent    = fmtPctClean(v.rate2);
+  $('p2-save-a').textContent  = fmt$(saveVsA);
+  $('p2-save-b').textContent  = fmt$(saveVsB);
+  $('p2-save-60').textContent = fmt$(save60);
+
+  // color savings
+  ['p2-save-a','p2-save-b','p2-save-60'].forEach(id => {
+    const el = $(id);
+    el.style.color = parseFloat(el.textContent.replace(/[$,]/g,'')) >= 0
+      ? 'var(--teal)' : 'var(--red)';
+  });
+
+  // ── Section 4: Price Table ──
+  const prices = [2500000, 2700000, 2800000, 3000000, 3250000];
+  const tbody = $('comparison-body');
+  tbody.innerHTML = '';
+  prices.forEach(p => {
+    const dAmt  = p * v.downPct;
+    const lAmt  = p - dAmt;
+    const pi    = calcPI(lAmt, v.rate1fa);
+    const io    = calcIO(lAmt, v.rate1io);
+    const l2    = Math.max(0, lAmt - v.paydown);
+    const p2pi  = calcPI(l2, v.rate2);
+    const ctc   = dAmt + p * 0.015;
+    const isTarget = p === 2700000;
+    const tr = document.createElement('tr');
+    if (isTarget) tr.className = 'target-row';
+    tr.innerHTML = `
+      <td>${fmt$(p)}</td>
+      <td>${fmt$(dAmt)}</td>
+      <td>${fmt$(lAmt)}</td>
+      <td>${fmt$(pi)}</td>
+      <td>${fmt$(io)}</td>
+      <td>${fmt$(p2pi)}</td>
+      <td>${fmt$(ctc)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // ── Section 5: HELOC Payback ──
+  const leftover = v.proceeds - v.paydown;
+  $('hpb-proceeds').textContent = fmt$(v.proceeds);
+  $('hpb-paydown').textContent  = fmt$(v.paydown);
+  $('hpb-balance').textContent  = fmt$(v.heloc);
+  $('hpb-leftover').textContent = fmt$(leftover);
+
+  const resultBlock = $('hpb-result-block');
+  if (v.heloc === 0) {
+    resultBlock.innerHTML = `<div class="heloc-result heloc-ok">✅ No HELOC balance to repay.</div>`;
+  } else if (leftover >= v.heloc) {
+    const remaining = leftover - v.heloc;
+    resultBlock.innerHTML = `
+      <div class="heloc-result heloc-ok">✅ HELOC paid off at close</div>
+      <div class="stat-row" style="margin-top:6px;">
+        <span class="stat-label">Cash remaining after payoff</span>
+        <span class="stat-val" style="color:var(--teal);">${fmt$(remaining)}</span>
+      </div>`;
+  } else {
+    const gap = v.heloc - leftover;
+    // Monthly payment to pay off remaining HELOC (interest + principal spread)
+    // Simple: use same IO cost + show months to payoff assuming fixed extra payment
+    const helocMonthlyInterest = gap * (v.helocRate / 100) / 12;
+    // Assume they pay e.g. $2k/mo toward remaining HELOC
+    // Just show the raw gap and carrying cost, let user interpret
+    resultBlock.innerHTML = `
+      <div class="heloc-result heloc-gap">⚠️ HELOC not fully covered by proceeds</div>
+      <div class="stat-row" style="margin-top:6px;">
+        <span class="stat-label">Remaining HELOC after proceeds</span>
+        <span class="stat-val" style="color:var(--red);">${fmt$(gap)}</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Monthly interest on remaining</span>
+        <span class="stat-val" style="color:var(--red);">${fmt$(helocMonthlyInterest)}</span>
+      </div>
+      <div style="margin-top:10px; font-size:.8rem; color:var(--muted);">
+        <strong>Payoff scenarios</strong> (extra monthly payment toward HELOC):
+      </div>
+      <div id="heloc-payoff-table" style="margin-top:8px;"></div>`;
+
+    // Build payoff table
+    const scenarios = [1000, 2000, 3000, 5000];
+    let rows = '<table style="width:100%; font-size:.82rem;"><thead><tr><th style="text-align:left; padding:5px 8px; background:var(--bg); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">Monthly Payment</th><th style="text-align:right; padding:5px 8px; background:var(--bg); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">Months to Payoff</th><th style="text-align:right; padding:5px 8px; background:var(--bg); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">Total Interest</th></tr></thead><tbody>';
+    scenarios.forEach(pmt => {
+      const monthlyR = v.helocRate / 100 / 12;
+      let bal = gap;
+      let months = 0;
+      let totalInt = 0;
+      if (pmt <= helocMonthlyInterest) {
+        rows += `<tr><td style="padding:5px 8px; border-bottom:1px solid var(--border);">${fmt$(pmt)}/mo</td><td style="text-align:right; padding:5px 8px; border-bottom:1px solid var(--border); color:var(--red);">Never (too low)</td><td style="text-align:right; padding:5px 8px; border-bottom:1px solid var(--border);">—</td></tr>`;
+        return;
+      }
+      while (bal > 0 && months < 600) {
+        const interest = bal * monthlyR;
+        totalInt += interest;
+        bal = bal + interest - pmt;
+        months++;
+        if (bal < 0) bal = 0;
+      }
+      rows += `<tr><td style="padding:5px 8px; border-bottom:1px solid var(--border);">${fmt$(pmt)}/mo</td><td style="text-align:right; padding:5px 8px; border-bottom:1px solid var(--border);">${months} mo (${(months/12).toFixed(1)} yr)</td><td style="text-align:right; padding:5px 8px; border-bottom:1px solid var(--border);">${fmt$(Math.round(totalInt))}</td></tr>`;
+    });
+    rows += '</tbody></table>';
+    const pt = document.getElementById('heloc-payoff-table');
+    if (pt) pt.innerHTML = rows;
+  }
+
+  // ── Timestamp ──
+  $('last-updated').textContent = new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric', minute: '2-digit', second: '2-digit'
+  });
+}
+
+// ─── Initial render ────────────────────────────────────────────────────────────
+recalculate();
+</script>
+
+</body>
+</html>
