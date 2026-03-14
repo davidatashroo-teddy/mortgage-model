@@ -327,6 +327,91 @@
       padding: 0 2px;
     }
     .input-group-label:first-child { margin-top: 0; }
+
+    /* ── Sale breakdown ──────────────────────────────────────────── */
+    .sale-breakdown {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-top: 14px;
+      font-size: .82rem;
+    }
+    .sale-breakdown .sale-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      color: var(--muted);
+    }
+    .sale-breakdown .sale-row.net {
+      border-top: 1px solid var(--border);
+      margin-top: 6px;
+      padding-top: 8px;
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--teal);
+    }
+    .sale-breakdown .sale-row.net span:last-child { color: var(--teal); }
+
+    /* ── PITI toggle ─────────────────────────────────────────────── */
+    .piti-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0 6px;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+    }
+    .piti-toggle-row label {
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+    }
+    /* Toggle switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--blue); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    .piti-sliders { margin-top: 14px; }
+
+    /* ── PITI stat rows (hidden by default) ──────────────────────── */
+    .piti-row { display: none; color: var(--amber); }
+    .piti-row .stat-label { color: var(--amber); opacity: .85; }
+    .piti-total-row { display: none; }
+    .piti-total-row .stat-label { font-weight: 700; }
+    .piti-total-row .stat-val { font-weight: 800; color: var(--navy); }
+    body.piti-on .piti-row { display: flex; }
+    body.piti-on .piti-total-row { display: flex; }
+    body.piti-on .piti-sliders { display: block; }
+    body:not(.piti-on) .piti-sliders { display: none; }
+    .piti-table-row { display: none; }
+    body.piti-on .piti-table-row { display: table-row; }
   </style>
 </head>
 <body>
@@ -362,6 +447,14 @@
             <span class="slider-val" id="val-down">20.00%</span>
           </div>
           <input type="range" id="sl-down" min="10" max="30" step="1" value="20" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Buyer Closing Costs</span>
+            <span class="slider-val" id="val-closing">1.50%</span>
+          </div>
+          <input type="range" id="sl-closing" min="0.5" max="3" step="0.1" value="1.5" />
         </div>
 
       </div>
@@ -424,15 +517,31 @@
 
       </div>
 
-      <div class="input-group-label">🏠 Sale & Bridge</div>
+      <div class="input-group-label">🏠 Current Home Sale (Snowberry)</div>
       <div class="slider-grid">
 
         <div class="slider-row">
           <div class="slider-label-row">
-            <span class="slider-label">Snowberry Net Proceeds</span>
-            <span class="slider-val" id="val-proceeds">$700,000</span>
+            <span class="slider-label">Snowberry Est. Sale Price</span>
+            <span class="slider-val" id="val-saleprice">$2,200,000</span>
           </div>
-          <input type="range" id="sl-proceeds" min="500000" max="1200000" step="25000" value="700000" />
+          <input type="range" id="sl-saleprice" min="1500000" max="3000000" step="25000" value="2200000" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Agent Commission</span>
+            <span class="slider-val" id="val-agentfee">6.0%</span>
+          </div>
+          <input type="range" id="sl-agentfee" min="3" max="7" step="0.5" value="6" />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-label-row">
+            <span class="slider-label">Seller Closing Costs</span>
+            <span class="slider-val" id="val-sellerclosing">1.0%</span>
+          </div>
+          <input type="range" id="sl-sellerclosing" min="0.5" max="2" step="0.1" value="1" />
         </div>
 
         <div class="slider-row">
@@ -444,6 +553,46 @@
         </div>
 
       </div>
+
+      <!-- Sale proceeds breakdown -->
+      <div class="sale-breakdown">
+        <div class="sale-row"><span>Sale price</span><span id="sb-saleprice">—</span></div>
+        <div class="sale-row"><span>− Mortgage payoff</span><span>−$1,320,000</span></div>
+        <div class="sale-row"><span>− Prep &amp; staging costs</span><span>−$60,000</span></div>
+        <div class="sale-row"><span id="sb-agentlabel">− Agent fees (6%)</span><span id="sb-agentfee">—</span></div>
+        <div class="sale-row"><span id="sb-sellerlabel">− Seller closing (1.0%)</span><span id="sb-sellerclosing">—</span></div>
+        <div class="sale-row net"><span>= Net Proceeds</span><span id="sb-net">—</span></div>
+      </div>
+
+      <!-- PITI Toggle -->
+      <div class="piti-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="piti-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <label for="piti-toggle">Include Property Tax &amp; Insurance (PITI)</label>
+      </div>
+
+      <div class="piti-sliders">
+        <div class="slider-grid" style="margin-top:10px;">
+          <div class="slider-row">
+            <div class="slider-label-row">
+              <span class="slider-label">Annual Property Tax Rate</span>
+              <span class="slider-val" id="val-taxrate">1.25%</span>
+            </div>
+            <input type="range" id="sl-taxrate" min="0.8" max="1.8" step="0.05" value="1.25" />
+            <div style="font-size:.72rem; color:var(--muted); margin-top:2px;">Contra Costa County default: 1.25%</div>
+          </div>
+          <div class="slider-row">
+            <div class="slider-label-row">
+              <span class="slider-label">Annual Home Insurance</span>
+              <span class="slider-val" id="val-insurance">$10,000</span>
+            </div>
+            <input type="range" id="sl-insurance" min="5000" max="30000" step="1000" value="10000" />
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -477,6 +626,18 @@
           <span class="stat-label">HELOC Interest</span>
           <span class="stat-val" id="p1a-heloc">—</span>
         </div>
+        <div class="stat-row piti-row">
+          <span class="stat-label">Property Tax / mo</span>
+          <span class="stat-val" id="p1a-tax">—</span>
+        </div>
+        <div class="stat-row piti-row">
+          <span class="stat-label">Insurance / mo</span>
+          <span class="stat-val" id="p1a-ins">—</span>
+        </div>
+        <div class="stat-row piti-total-row">
+          <span class="stat-label">Total PITI / mo</span>
+          <span class="stat-val" id="p1a-piti">—</span>
+        </div>
         <div class="stat-row">
           <span class="stat-label">Bridge Cost (<span id="p1a-months">12</span> mo)</span>
           <span class="stat-val" id="p1a-bridge-total">—</span>
@@ -501,6 +662,18 @@
         <div class="stat-row">
           <span class="stat-label">HELOC Interest</span>
           <span class="stat-val" id="p1b-heloc">—</span>
+        </div>
+        <div class="stat-row piti-row">
+          <span class="stat-label">Property Tax / mo</span>
+          <span class="stat-val" id="p1b-tax">—</span>
+        </div>
+        <div class="stat-row piti-row">
+          <span class="stat-label">Insurance / mo</span>
+          <span class="stat-val" id="p1b-ins">—</span>
+        </div>
+        <div class="stat-row piti-total-row">
+          <span class="stat-label">Total PITI / mo</span>
+          <span class="stat-val" id="p1b-piti">—</span>
         </div>
         <div class="stat-row">
           <span class="stat-label">Bridge Cost (<span id="p1b-months">12</span> mo)</span>
@@ -586,6 +759,7 @@
               <th>P1 IO / mo</th>
               <th>P2 P&amp;I / mo</th>
               <th>Cash to Close</th>
+              <th class="piti-table-row" style="display:none;">PITI / mo</th>
             </tr>
           </thead>
           <tbody id="comparison-body">
@@ -642,15 +816,8 @@ function fmt$(n, decimals=0) {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-function fmtPct(n) {
-  return n.toFixed(3).replace(/\.?0+$/, match => match === '.' ? '' : match) + '%';
-  // cleaner version:
-}
-
 function fmtPctClean(n) {
-  // show up to 3 decimal places, strip trailing zeros but keep at least 2
   let s = n.toFixed(3);
-  // remove trailing zeros after decimal, but keep 2 dec min
   s = s.replace(/(\.\d\d[1-9]?)0+$/, '$1');
   return s + '%';
 }
@@ -670,20 +837,26 @@ function calcIO(principal, annualRate) {
 
 // ─── Slider wiring ────────────────────────────────────────────────────────────
 const sliders = {
-  price:    { id: 'sl-price',    valId: 'val-price',    fmt: v => fmt$(v) },
-  down:     { id: 'sl-down',     valId: 'val-down',     fmt: v => fmtPctClean(parseFloat(v)) },
-  rate1fa:  { id: 'sl-rate1fa',  valId: 'val-rate1fa',  fmt: v => fmtPctClean(parseFloat(v)) },
-  rate1io:  { id: 'sl-rate1io',  valId: 'val-rate1io',  fmt: v => fmtPctClean(parseFloat(v)) },
-  rate2:    { id: 'sl-rate2',    valId: 'val-rate2',    fmt: v => fmtPctClean(parseFloat(v)) },
-  helocrate:{ id: 'sl-helocrate',valId: 'val-helocrate',fmt: v => fmtPctClean(parseFloat(v)) },
-  paydown:  { id: 'sl-paydown',  valId: 'val-paydown',  fmt: v => fmt$(v) },
-  heloc:    { id: 'sl-heloc',    valId: 'val-heloc',    fmt: v => fmt$(v) },
-  proceeds: { id: 'sl-proceeds', valId: 'val-proceeds', fmt: v => fmt$(v) },
-  bridge:   { id: 'sl-bridge',   valId: 'val-bridge',   fmt: v => v + ' months' },
+  price:        { id: 'sl-price',        valId: 'val-price',        fmt: v => fmt$(v) },
+  down:         { id: 'sl-down',         valId: 'val-down',         fmt: v => fmtPctClean(parseFloat(v)) },
+  closing:      { id: 'sl-closing',      valId: 'val-closing',      fmt: v => parseFloat(v).toFixed(2) + '%' },
+  rate1fa:      { id: 'sl-rate1fa',      valId: 'val-rate1fa',      fmt: v => fmtPctClean(parseFloat(v)) },
+  rate1io:      { id: 'sl-rate1io',      valId: 'val-rate1io',      fmt: v => fmtPctClean(parseFloat(v)) },
+  rate2:        { id: 'sl-rate2',        valId: 'val-rate2',        fmt: v => fmtPctClean(parseFloat(v)) },
+  helocrate:    { id: 'sl-helocrate',    valId: 'val-helocrate',    fmt: v => fmtPctClean(parseFloat(v)) },
+  paydown:      { id: 'sl-paydown',      valId: 'val-paydown',      fmt: v => fmt$(v) },
+  heloc:        { id: 'sl-heloc',        valId: 'val-heloc',        fmt: v => fmt$(v) },
+  saleprice:    { id: 'sl-saleprice',    valId: 'val-saleprice',    fmt: v => fmt$(v) },
+  agentfee:     { id: 'sl-agentfee',     valId: 'val-agentfee',     fmt: v => parseFloat(v).toFixed(1) + '%' },
+  sellerclosing:{ id: 'sl-sellerclosing',valId: 'val-sellerclosing',fmt: v => parseFloat(v).toFixed(1) + '%' },
+  bridge:       { id: 'sl-bridge',       valId: 'val-bridge',       fmt: v => v + ' months' },
+  taxrate:      { id: 'sl-taxrate',      valId: 'val-taxrate',      fmt: v => parseFloat(v).toFixed(2) + '%' },
+  insurance:    { id: 'sl-insurance',    valId: 'val-insurance',    fmt: v => fmt$(v) },
 };
 
 Object.entries(sliders).forEach(([key, cfg]) => {
   const el = $(cfg.id);
+  if (!el) return;
   const valEl = $(cfg.valId);
   el.addEventListener('input', () => {
     valEl.textContent = cfg.fmt(el.value);
@@ -691,47 +864,94 @@ Object.entries(sliders).forEach(([key, cfg]) => {
   });
 });
 
+// ─── PITI toggle ──────────────────────────────────────────────────────────────
+$('piti-toggle').addEventListener('change', function() {
+  document.body.classList.toggle('piti-on', this.checked);
+  // show/hide PITI table header cell
+  document.querySelectorAll('th.piti-table-row').forEach(th => {
+    th.style.display = this.checked ? 'table-cell' : 'none';
+  });
+  recalculate();
+});
+
 // ─── Main recalc ──────────────────────────────────────────────────────────────
 function getVals() {
+  const salePrice     = parseFloat($('sl-saleprice').value);
+  const agentFeePct   = parseFloat($('sl-agentfee').value) / 100;
+  const sellerClosPct = parseFloat($('sl-sellerclosing').value) / 100;
+  const MORTGAGE      = 1320000;
+  const PREP          = 60000;
+  const agentFee      = salePrice * agentFeePct;
+  const sellerClos    = salePrice * sellerClosPct;
+  const netProceeds   = salePrice - MORTGAGE - PREP - agentFee - sellerClos;
+
   return {
-    price:     parseFloat($('sl-price').value),
-    downPct:   parseFloat($('sl-down').value) / 100,
-    rate1fa:   parseFloat($('sl-rate1fa').value),
-    rate1io:   parseFloat($('sl-rate1io').value),
-    rate2:     parseFloat($('sl-rate2').value),
-    helocRate: parseFloat($('sl-helocrate').value),
-    paydown:   parseFloat($('sl-paydown').value),
-    heloc:     parseFloat($('sl-heloc').value),
-    proceeds:  parseFloat($('sl-proceeds').value),
-    bridge:    parseInt($('sl-bridge').value),
+    price:        parseFloat($('sl-price').value),
+    downPct:      parseFloat($('sl-down').value) / 100,
+    closingPct:   parseFloat($('sl-closing').value) / 100,
+    rate1fa:      parseFloat($('sl-rate1fa').value),
+    rate1io:      parseFloat($('sl-rate1io').value),
+    rate2:        parseFloat($('sl-rate2').value),
+    helocRate:    parseFloat($('sl-helocrate').value),
+    paydown:      parseFloat($('sl-paydown').value),
+    heloc:        parseFloat($('sl-heloc').value),
+    bridge:       parseInt($('sl-bridge').value),
+    salePrice,
+    agentFeePct,
+    sellerClosPct,
+    agentFee,
+    sellerClos,
+    netProceeds,
+    taxRate:      parseFloat($('sl-taxrate').value) / 100,
+    insurance:    parseFloat($('sl-insurance').value),
+    pitiOn:       $('piti-toggle').checked,
   };
 }
 
 function recalculate() {
   const v = getVals();
 
+  // ── Sale breakdown ──
+  $('sb-saleprice').textContent    = fmt$(v.salePrice);
+  $('sb-agentlabel').textContent   = `− Agent fees (${(v.agentFeePct*100).toFixed(1)}%)`;
+  $('sb-agentfee').textContent     = '−' + fmt$(v.agentFee);
+  $('sb-sellerlabel').textContent  = `− Seller closing (${(v.sellerClosPct*100).toFixed(1)}%)`;
+  $('sb-sellerclosing').textContent= '−' + fmt$(v.sellerClos);
+  $('sb-net').textContent          = fmt$(v.netProceeds);
+  $('sb-net').style.color          = v.netProceeds >= 0 ? 'var(--teal)' : 'var(--red)';
+
   // ── Derived ──
-  const downAmt   = v.price * v.downPct;
-  const loan1     = v.price - downAmt;
-  const helocMo   = v.heloc * (v.helocRate / 100) / 12;
+  const downAmt    = v.price * v.downPct;
+  const loan1      = v.price - downAmt;
+  const helocMo    = v.heloc * (v.helocRate / 100) / 12;
+  const taxMo      = (v.price * v.taxRate) / 12;
+  const insMo      = v.insurance / 12;
 
   // Phase 1
-  const p1a_pi    = calcPI(loan1, v.rate1fa);
-  const p1a_total = p1a_pi + helocMo;
-  const p1b_io    = calcIO(loan1, v.rate1io);
-  const p1b_total = p1b_io + helocMo;
+  const p1a_pi     = calcPI(loan1, v.rate1fa);
+  const p1a_base   = p1a_pi + helocMo;
+  const p1a_piti   = p1a_base + taxMo + insMo;
+  const p1a_total  = v.pitiOn ? p1a_piti : p1a_base;
+
+  const p1b_io     = calcIO(loan1, v.rate1io);
+  const p1b_base   = p1b_io + helocMo;
+  const p1b_piti   = p1b_base + taxMo + insMo;
+  const p1b_total  = v.pitiOn ? p1b_piti : p1b_base;
 
   // Phase 2
-  const loan2     = Math.max(0, loan1 - v.paydown);
-  const p2_pay    = calcPI(loan2, v.rate2);
-  const saveVsA   = p1a_total - p2_pay;
-  const saveVsB   = p1b_total - p2_pay;
-  const save60    = saveVsA * 60;
+  const loan2      = Math.max(0, loan1 - v.paydown);
+  const p2_pay     = calcPI(loan2, v.rate2);
+  const saveVsA    = p1a_total - p2_pay;
+  const saveVsB    = p1b_total - p2_pay;
+  const save60     = (p1a_base - p2_pay) * 60;
 
   // ── Section 2: Phase 1 ──
   $('p1a-loan').textContent         = fmt$(loan1);
   $('p1a-pi').textContent           = fmt$(p1a_pi);
   $('p1a-heloc').textContent        = fmt$(helocMo);
+  $('p1a-tax').textContent          = fmt$(taxMo);
+  $('p1a-ins').textContent          = fmt$(insMo);
+  $('p1a-piti').textContent         = fmt$(p1a_piti);
   $('p1a-total').textContent        = fmt$(p1a_total);
   $('p1a-months').textContent       = v.bridge;
   $('p1a-bridge-total').textContent = fmt$(p1a_total * v.bridge);
@@ -739,6 +959,9 @@ function recalculate() {
   $('p1b-loan').textContent         = fmt$(loan1);
   $('p1b-io').textContent           = fmt$(p1b_io);
   $('p1b-heloc').textContent        = fmt$(helocMo);
+  $('p1b-tax').textContent          = fmt$(taxMo);
+  $('p1b-ins').textContent          = fmt$(insMo);
+  $('p1b-piti').textContent         = fmt$(p1b_piti);
   $('p1b-total').textContent        = fmt$(p1b_total);
   $('p1b-months').textContent       = v.bridge;
   $('p1b-bridge-total').textContent = fmt$(p1b_total * v.bridge);
@@ -753,7 +976,6 @@ function recalculate() {
   $('p2-save-b').textContent  = fmt$(saveVsB);
   $('p2-save-60').textContent = fmt$(save60);
 
-  // color savings
   ['p2-save-a','p2-save-b','p2-save-60'].forEach(id => {
     const el = $(id);
     el.style.color = parseFloat(el.textContent.replace(/[$,]/g,'')) >= 0
@@ -765,13 +987,14 @@ function recalculate() {
   const tbody = $('comparison-body');
   tbody.innerHTML = '';
   prices.forEach(p => {
-    const dAmt  = p * v.downPct;
-    const lAmt  = p - dAmt;
-    const pi    = calcPI(lAmt, v.rate1fa);
-    const io    = calcIO(lAmt, v.rate1io);
-    const l2    = Math.max(0, lAmt - v.paydown);
-    const p2pi  = calcPI(l2, v.rate2);
-    const ctc   = dAmt + p * 0.015;
+    const dAmt    = p * v.downPct;
+    const lAmt    = p - dAmt;
+    const pi      = calcPI(lAmt, v.rate1fa);
+    const io      = calcIO(lAmt, v.rate1io);
+    const l2      = Math.max(0, lAmt - v.paydown);
+    const p2pi    = calcPI(l2, v.rate2);
+    const ctc     = dAmt + p * v.closingPct;
+    const pitiMo  = pi + helocMo + (p * v.taxRate / 12) + insMo;
     const isTarget = p === 2700000;
     const tr = document.createElement('tr');
     if (isTarget) tr.className = 'target-row';
@@ -783,13 +1006,14 @@ function recalculate() {
       <td>${fmt$(io)}</td>
       <td>${fmt$(p2pi)}</td>
       <td>${fmt$(ctc)}</td>
+      <td class="piti-table-row" style="display:${v.pitiOn?'table-cell':'none'}">${fmt$(pitiMo)}</td>
     `;
     tbody.appendChild(tr);
   });
 
   // ── Section 5: HELOC Payback ──
-  const leftover = v.proceeds - v.paydown;
-  $('hpb-proceeds').textContent = fmt$(v.proceeds);
+  const leftover = v.netProceeds - v.paydown;
+  $('hpb-proceeds').textContent = fmt$(v.netProceeds);
   $('hpb-paydown').textContent  = fmt$(v.paydown);
   $('hpb-balance').textContent  = fmt$(v.heloc);
   $('hpb-leftover').textContent = fmt$(leftover);
@@ -802,16 +1026,12 @@ function recalculate() {
     resultBlock.innerHTML = `
       <div class="heloc-result heloc-ok">✅ HELOC paid off at close</div>
       <div class="stat-row" style="margin-top:6px;">
-        <span class="stat-label">Cash remaining after payoff</span>
+        <span class="stat-label">Cash remaining after HELOC payoff</span>
         <span class="stat-val" style="color:var(--teal);">${fmt$(remaining)}</span>
       </div>`;
   } else {
     const gap = v.heloc - leftover;
-    // Monthly payment to pay off remaining HELOC (interest + principal spread)
-    // Simple: use same IO cost + show months to payoff assuming fixed extra payment
     const helocMonthlyInterest = gap * (v.helocRate / 100) / 12;
-    // Assume they pay e.g. $2k/mo toward remaining HELOC
-    // Just show the raw gap and carrying cost, let user interpret
     resultBlock.innerHTML = `
       <div class="heloc-result heloc-gap">⚠️ HELOC not fully covered by proceeds</div>
       <div class="stat-row" style="margin-top:6px;">
@@ -827,14 +1047,11 @@ function recalculate() {
       </div>
       <div id="heloc-payoff-table" style="margin-top:8px;"></div>`;
 
-    // Build payoff table
     const scenarios = [1000, 2000, 3000, 5000];
     let rows = '<table style="width:100%; font-size:.82rem;"><thead><tr><th style="text-align:left; padding:5px 8px; background:var(--bg); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">Monthly Payment</th><th style="text-align:right; padding:5px 8px; background:var(--bg); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">Months to Payoff</th><th style="text-align:right; padding:5px 8px; background:var(--bg); font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">Total Interest</th></tr></thead><tbody>';
     scenarios.forEach(pmt => {
       const monthlyR = v.helocRate / 100 / 12;
-      let bal = gap;
-      let months = 0;
-      let totalInt = 0;
+      let bal = gap, months = 0, totalInt = 0;
       if (pmt <= helocMonthlyInterest) {
         rows += `<tr><td style="padding:5px 8px; border-bottom:1px solid var(--border);">${fmt$(pmt)}/mo</td><td style="text-align:right; padding:5px 8px; border-bottom:1px solid var(--border); color:var(--red);">Never (too low)</td><td style="text-align:right; padding:5px 8px; border-bottom:1px solid var(--border);">—</td></tr>`;
         return;
