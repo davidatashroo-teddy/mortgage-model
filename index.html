@@ -718,6 +718,18 @@
             <span class="stat-label">Phase 2 Rate</span>
             <span class="stat-val" id="p2-rate">—</span>
           </div>
+          <div class="stat-row piti-row">
+            <span class="stat-label">Property Tax / mo</span>
+            <span class="stat-val" id="p2-tax">—</span>
+          </div>
+          <div class="stat-row piti-row">
+            <span class="stat-label">Insurance / mo</span>
+            <span class="stat-val" id="p2-ins">—</span>
+          </div>
+          <div class="stat-row piti-total-row">
+            <span class="stat-label">Total PITI / mo</span>
+            <span class="stat-val" id="p2-piti">—</span>
+          </div>
         </div>
 
         <div>
@@ -967,11 +979,15 @@ function recalculate() {
   $('p1b-bridge-total').textContent = fmt$(p1b_total * v.bridge);
 
   // ── Section 3: Phase 2 ──
+  const p2_piti = p2_pay + taxMo + insMo;
   $('p2-payment').textContent = fmt$(p2_pay);
   $('p2-p1loan').textContent  = fmt$(loan1);
   $('p2-paydown').textContent = fmt$(v.paydown);
   $('p2-loan').textContent    = fmt$(loan2);
   $('p2-rate').textContent    = fmtPctClean(v.rate2);
+  $('p2-tax').textContent     = fmt$(taxMo);
+  $('p2-ins').textContent     = fmt$(insMo);
+  $('p2-piti').textContent    = fmt$(p2_piti);
   $('p2-save-a').textContent  = fmt$(saveVsA);
   $('p2-save-b').textContent  = fmt$(saveVsB);
   $('p2-save-60').textContent = fmt$(save60);
